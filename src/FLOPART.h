@@ -14,9 +14,9 @@ int FLOPART
  const double *weight_vec,
  const int data_count,
  const double penalty,
+ const int *label_types,
  const int *label_starts,
  const int *label_ends,
- const int *label_types,
  const int label_count,
  // the following matrices are for output.
  double *cost_mat,

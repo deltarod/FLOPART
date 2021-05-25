@@ -1,8 +1,8 @@
 #include <vector>
 #include <stdio.h>
+#include <iostream>
 #include "funPieceListLog.h"
 #include <math.h>
-#include <R.h> // for Rprintf
 #include "FLOPART.h"
 
 int FLOPART

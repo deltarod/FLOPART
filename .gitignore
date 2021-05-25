@@ -1,9 +1,9 @@
-inst/testfiles
 *~
+.Rhistory
 *.o
 *.so
-*.dll
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
+*.egg-info/
+/.idea/
+/build/
+*/__pycache__/
+/dist/

@@ -31,7 +31,6 @@ public:
     (double li, double lo, double co, double m, double M, int i, double);
   double argmin();
   double argmin_mean();
-  void print();
   double get_smaller_root(double);
   double get_larger_root(double);
   bool has_two_roots(double);
@@ -59,7 +58,6 @@ public:
   void push_piece(PoissonLossPieceListLog::iterator, double, double);
   void add(double Linear, double Log, double Constant);
   void multiply(double);
-  void print();
   void set_prev_seg_end(int prev_seg_end);
   void findMean(MinimizeResult *bestMinResult);
   double findCost(double mean);
