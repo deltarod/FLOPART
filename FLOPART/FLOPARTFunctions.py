@@ -2,12 +2,11 @@ import sys
 import numpy as np
 import pandas as pd
 import FLOPARTInterface
-np.set_printoptions(threshold=sys.maxsize)
 
 defaultWeight = 1
 
-
 def runFLOPART(data, labels, penalty, weights=-1):
+    # Create a weight vec if doesn't exist
     if weights == -1:
         weight_vec = np.full(len(data), defaultWeight, dtype=np.double)
         weights = defaultWeight
@@ -22,6 +21,7 @@ def runFLOPART(data, labels, penalty, weights=-1):
     lenData = len(data)
     upscale = False
 
+    # Data must be np.ndarray type intc
     if isinstance(data, list):
         data = np.array(data).astype(np.intc)
     elif not isinstance(data, np.intc):
@@ -37,68 +37,20 @@ def runFLOPART(data, labels, penalty, weights=-1):
                                                len(labels.index),
                                                penalty)
 
-    print(flopartOutput.keys())
+    segments = {'start': flopartOutput['segment_starts'],
+                'end': flopartOutput['segment_ends'],
+                'state': flopartOutput['segment_states']}
 
-    print('cost\n', flopartOutput['cost'])
-    print('end\n', flopartOutput['end'])
-    print('mean\n', flopartOutput['mean'])
-    print('intervals_mat\n', flopartOutput['intervals_mat'])
-    print('state_vec\n', flopartOutput['state_vec'])
+    # If the data is scaled, also scale the average
+    if upscale:
+        segments['mean'] = flopartOutput['segment_means'] * weights
+    else:
+        segments['mean'] = flopartOutput['segment_means']
 
+    segmentsDf = pd.DataFrame(segments)
 
-def runSlimFLOPART(data, labels, penalty, n_updates=-1, penalty_unlabeled=-1):
-    if not float(n_updates).is_integer():
-        raise Exception
-    if n_updates < 1:
-        n_updates = len(data)
+    segmentsDf = segmentsDf[segmentsDf['start'] <= segmentsDf['end']]
 
-    lenData = len(data)
-
-    penalty_labeled = penalty
-    if not penalty_unlabeled > 0:
-        penalty_unlabeled = penalty
-
-    if isinstance(data, list):
-        data = np.array(data).astype(np.double)
-
-    lopartOutput = FLOPARTInterface.interface(data,
-                                              lenData,
-                                              (labels['start'] - 1).to_numpy(dtype=np.intc),
-                                              (labels['end'] - 1).to_numpy(dtype=np.intc),
-                                              labels['change'].to_numpy(dtype=np.intc),
-                                              len(labels.index),
-                                              penalty_labeled,
-                                              penalty_unlabeled,
-                                              n_updates)
-
-    outputdf = pd.DataFrame(lopartOutput)
-
-    outputLen = len(outputdf.index)
-
-    addOne = outputdf['last_change'] + 1
-
-    changeVec = addOne[0 <= addOne]
-
-    segmentsTemp = outputdf[outputdf['last_change'] != -2]
-
-    starts = [1, ]
-
-    changeStarts = (changeVec + 1).tolist()
-
-    starts.extend(changeStarts)
-
-    ends = changeVec.tolist()
-
-    ends.extend([outputLen])
-
-    segmentRanges = {'start': starts, 'end': ends}
-
-    segmentsdf = pd.DataFrame(segmentRanges)
-
-    outputSegments = segmentsdf[segmentsdf['start'] < segmentsdf['end']].copy()
-
-    heights = segmentsTemp['mean'].tolist()
-
-    outputSegments['height'] = heights
-
-    return outputSegments
+    return {'cost_mat': flopartOutput['cost_mat'],
+            'intervals_mat': flopartOutput['intervals_mat'],
+            'segments_df': segmentsDf}

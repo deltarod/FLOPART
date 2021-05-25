@@ -21,9 +21,7 @@ def test_FLOPARTNoLabels():
     penalty = 10
     output = FLOPART.runFLOPART(data, labels, penalty)
 
-    print(output)
-
-    assert 1 == 0
+    assert len(output['segments_df'].index) != 0
 
 
 def test_FLOPARTWithLabel():
@@ -32,6 +30,4 @@ def test_FLOPARTWithLabel():
     penalty = 10
     output = FLOPART.runFLOPART(data, labels, penalty)
 
-    print(output)
-
-    assert 1 == 0
+    assert len(output['segments_df'].index) != 0

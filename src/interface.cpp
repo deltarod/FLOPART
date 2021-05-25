@@ -145,13 +145,49 @@ static PyObject * FLOPARTInterface(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    PyObject * output = Py_BuildValue("{s:O,s:O,s:O,s:O,s:O}",
-                                      "cost", out_cost,
-                                      "end", out_end,
-                                      "mean", out_mean,
-                                      "intervals_mat", out_intervals_mat,
-                                      "state_vec", out_state_vec);
+    PyArrayObject *seg_mean_vec, *seg_start_vec, *seg_end_vec, *seg_state_vec;
 
+    //convert to segments data table.
+    npy_intp seg_count=1;
+    while(seg_count < lenData && 0 <= out_state_vecA[seg_count-1]){
+    seg_count++;
+    }
+
+    seg_mean_vec = (PyArrayObject*)PyArray_ZEROS(1, &seg_count, NPY_INT, 0);
+    int *seg_mean_vecA = (int*)PyArray_DATA(seg_mean_vec);
+
+    seg_start_vec = (PyArrayObject*)PyArray_ZEROS(1, &seg_count, NPY_INT, 0);
+    int *seg_start_vecA = (int*)PyArray_DATA(seg_start_vec);
+
+    seg_end_vec = (PyArrayObject*)PyArray_ZEROS(1, &seg_count, NPY_INT, 0);
+    int *seg_end_vecA = (int*)PyArray_DATA(seg_end_vec);
+
+    seg_state_vec = (PyArrayObject*)PyArray_ZEROS(1, &seg_count, NPY_INT, 0);
+    int *seg_state_vecA = (int*)PyArray_DATA(seg_state_vec);
+
+    for(int seg_i=0; seg_i < seg_count; seg_i++){
+    int mean_index = seg_count-1-seg_i;
+    seg_mean_vecA[seg_i] = out_meanA[mean_index];
+    seg_state_vecA[seg_i] = out_state_vecA[mean_index];
+    if(mean_index==0){
+      seg_end_vecA[seg_i] = lenData;
+    }else{
+      seg_end_vecA[seg_i] = out_endA[mean_index-1]+1;
+    }
+    if(seg_i==0){
+      seg_start_vecA[seg_i] = 1;
+    }else{
+      seg_start_vecA[seg_i] = out_endA[mean_index]+2;
+    }
+    }
+
+    PyObject * output = Py_BuildValue("{s:O,s:O,s:O,s:O,s:O,s:O}",
+                                      "cost_mat", out_cost,
+                                      "intervals_mat", out_intervals_mat,
+                                      "segment_starts", seg_start_vec,
+                                      "segment_ends", seg_end_vec,
+                                      "segment_means", seg_mean_vec,
+                                      "segment_states", seg_state_vec);
 
     return output;
 }
